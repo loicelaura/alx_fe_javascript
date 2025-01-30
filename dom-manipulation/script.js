@@ -8,6 +8,27 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) ||[
   function saveQuotes() {
     localStorage.setItem("quotes", JSON.stringify(quotes));
 }
+// Populate category dropdown dynamically
+function populateCategories() {
+  const categoryFilter = document.getElementById("categoryFilter");
+  const categories = ["all", ...new Set(quotes.map(q => q.category))];
+
+  categoryFilter.innerHTML = categories
+      .map(category => `<option value="${category}">${category}</option>`)
+      .join("");
+
+  // Restore last selected category
+  const lastSelected = localStorage.getItem("selectedCategory") || "all";
+  categoryFilter.value = lastSelected;
+}
+
+// Filter quotes based on selected category
+function filterQuotes() {
+  const selectedCategory = document.getElementById("categoryFilter").value;
+  localStorage.setItem("selectedCategory", selectedCategory);
+  updateQuoteDisplay();
+}
+
  
   function showRandomQuote() {
     const randomIndex = Math.floor(Math.random() * quotes.length);
@@ -41,6 +62,10 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) ||[
     document.getElementById("newQuoteCategory").value = "";
   
     updateQuoteDisplay();
+    alert("Quote added successfully!");
+
+    updateQuoteDisplay();
+    populateCategories(); // Update the category dropdown
     alert("Quote added successfully!");
   }
   
