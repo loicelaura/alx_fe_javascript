@@ -1,15 +1,27 @@
-const quotes = [
+const quotes = JSON.parse(localStorage.getItem("quotes")) ||[
     { text: "The only way to do great work is to love what you do.", category: "Motivation" },
     { text: "Life is what happens when you're busy making other plans.", category: "Life" },
     { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", category: "Perseverance" },
   ];
-  
+
+  function saveQuotes() {
+    localStorage.setItem("quotes", JSON.stringify(quotes));
+}
+ 
   function showRandomQuote() {
     const randomIndex = Math.floor(Math.random() * quotes.length);
     const quote = quotes[randomIndex];
     document.getElementById("quoteDisplay").innerHTML = `<p>"${quote.text}" - <strong>${quote.category}</strong></p>`;
   }
-  
+
+  document.addEventListener("DOMContentLoaded", () => {
+    createAddQuoteForm();
+    const lastQuote = JSON.parse(sessionStorage.getItem("lastQuote"));
+    if (lastQuote) {
+        document.getElementById("quoteDisplay").innerHTML = `<p>"${lastQuote.text}" - <strong>${lastQuote.category}</strong></p>`;
+    }
+});
+
   document.getElementById("newQuote").addEventListener("click", showRandomQuote);
   
   function addQuote() {
@@ -40,6 +52,33 @@ const quotes = [
       quoteDisplay.appendChild(quoteElement);
     });
   }
+
+  function exportToJsonFile() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(quotes));
+    const downloadAnchor = document.createElement("a");
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", "quotes.json");
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+}
+
+function importFromJsonFile(event) {
+  const fileReader = new FileReader();
+  fileReader.onload = function(event) {
+      try {
+          const importedQuotes = JSON.parse(event.target.result);
+          if (!Array.isArray(importedQuotes)) throw new Error("Invalid file format");
+          quotes.push(...importedQuotes);
+          saveQuotes();
+          alert("Quotes imported successfully!");
+      } catch (error) {
+          alert("Error importing quotes: " + error.message);
+      }
+  };
+  fileReader.readAsText(event.target.files[0]);
+}
+
   function createAddQuoteForm() {
     const formContainer = document.createElement("div");
   
