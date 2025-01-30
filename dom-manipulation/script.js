@@ -8,7 +8,7 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) ||[
   ];
 
   // Fetch quotes from the mock API
-async function fetchQuotesFromServer() {
+  async function syncQuotes() {
     try {
         const response = await fetch(API_URL);
         const data = await response.json();
