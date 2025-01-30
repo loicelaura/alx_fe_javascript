@@ -7,34 +7,74 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) ||[
     { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", category: "Perseverance" },
   ];
 
-  // Fetch quotes from the mock API
-  async function syncQuotes() {
-    try {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        
-        // Simulating server response with structured data
-        const serverQuotes = data.slice(0, 5).map(item => ({
-            text: item.title,
-            category: "Server Data"
-        }));
+ // Fetch quotes from the server and synchronize them with local quotes
+async function syncQuotes() {
+  try {
+      const response = await fetch(API_URL);
+      const data = await response.json();
 
-        mergeQuotes(serverQuotes);
-    } catch (error) {
-        console.error("Error fetching quotes:", error);
-    }
+      // Simulate fetching structured quotes from the API
+      const serverQuotes = data.slice(0, 5).map(item => ({
+          text: item.title,
+          category: "Server Data"
+      }));
+
+      const previousLength = quotes.length;
+      mergeQuotes(serverQuotes);
+
+      if (quotes.length > previousLength) {
+          showSyncNotification("✅ Quotes synced with server!");
+      }
+  } catch (error) {
+      console.error("Error fetching quotes:", error);
+      showSyncNotification("❌ Failed to sync quotes with server.");
+  }
 }
-// Merge local and server quotes while resolving conflicts
+
+// Merge local and server quotes while avoiding duplicates
 function mergeQuotes(serverQuotes) {
-    const localQuotes = JSON.parse(localStorage.getItem("quotes")) || [];
-    
-    // Avoid duplicates (compare text property)
-    const mergedQuotes = [...new Map([...localQuotes, ...serverQuotes].map(q => [q.text, q])).values()];
-    
-    localStorage.setItem("quotes", JSON.stringify(mergedQuotes));
-    updateQuoteDisplay();
+  const localQuotes = JSON.parse(localStorage.getItem("quotes")) || [];
+
+  // Avoid duplicates by comparing the text property
+  const mergedQuotes = [...new Map([...localQuotes, ...serverQuotes].map(q => [q.text, q])).values()];
+
+  localStorage.setItem("quotes", JSON.stringify(mergedQuotes));
+  updateQuoteDisplay();
 }
 
+// Function to show notifications
+function showSyncNotification(message) {
+  let notification = document.getElementById("syncNotification");
+  if (!notification) {
+      notification = document.createElement("div");
+      notification.id = "syncNotification";
+      notification.style.position = "fixed";
+      notification.style.bottom = "10px";
+      notification.style.right = "10px";
+      notification.style.padding = "10px";
+      notification.style.backgroundColor = "black";
+      notification.style.color = "white";
+      notification.style.borderRadius = "5px";
+      notification.style.zIndex = "1000";
+      document.body.appendChild(notification);
+  }
+  
+  notification.textContent = message;
+  notification.style.display = "block";
+
+  setTimeout(() => {
+      notification.style.display = "none";
+  }, 5000);
+}
+
+// Auto-sync every 10 seconds
+setInterval(syncQuotes, 10000);
+
+// Initialize on page load
+document.addEventListener("DOMContentLoaded", () => {
+  syncQuotes();
+  updateQuoteDisplay();
+});
 // Post new quotes to server (Simulation)
 async function postQuoteToServer(quote) {
     try {
