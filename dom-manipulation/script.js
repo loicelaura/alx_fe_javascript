@@ -1,8 +1,55 @@
+
+const API_URL = "https://jsonplaceholder.typicode.com/posts";
+
 const quotes = JSON.parse(localStorage.getItem("quotes")) ||[
     { text: "The only way to do great work is to love what you do.", category: "Motivation" },
     { text: "Life is what happens when you're busy making other plans.", category: "Life" },
     { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", category: "Perseverance" },
   ];
+
+  // Fetch quotes from the mock API
+async function fetchQuotesFromServer() {
+    try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        
+        // Simulating server response with structured data
+        const serverQuotes = data.slice(0, 5).map(item => ({
+            text: item.title,
+            category: "Server Data"
+        }));
+
+        mergeQuotes(serverQuotes);
+    } catch (error) {
+        console.error("Error fetching quotes:", error);
+    }
+}
+// Merge local and server quotes while resolving conflicts
+function mergeQuotes(serverQuotes) {
+    const localQuotes = JSON.parse(localStorage.getItem("quotes")) || [];
+    
+    // Avoid duplicates (compare text property)
+    const mergedQuotes = [...new Map([...localQuotes, ...serverQuotes].map(q => [q.text, q])).values()];
+    
+    localStorage.setItem("quotes", JSON.stringify(mergedQuotes));
+    updateQuoteDisplay();
+}
+
+// Post new quotes to server (Simulation)
+async function postQuoteToServer(quote) {
+    try {
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(quote),
+        });
+        const data = await response.json();
+        console.log("Posted to server:", data);
+    } catch (error) {
+        console.error("Error posting quote:", error);
+    }
+}
+
 
   // Save quotes to localStorage
   function saveQuotes() {
@@ -54,6 +101,7 @@ function filterQuotes() {
       alert("Please enter both a quote and a category.");
       return;
     }
+    postQuoteToServer(newQuote); // Simulate posting to server
   
     const newQuote = { text: newQuoteText, category: newQuoteCategory };
     quotes.push(newQuote);
@@ -68,6 +116,16 @@ function filterQuotes() {
     populateCategories(); // Update the category dropdown
     alert("Quote added successfully!");
   }
+
+  // Periodic syncing with the server (every 10 seconds)
+setInterval(fetchQuotesFromServer, 10000);
+
+// Initialize app
+document.addEventListener("DOMContentLoaded", () => {
+    fetchQuotesFromServer();
+    populateCategories();
+    updateQuoteDisplay();
+});
   
   function updateQuoteDisplay() {
     const quoteDisplay = document.getElementById("quoteDisplay");
