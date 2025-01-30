@@ -4,6 +4,7 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) ||[
     { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", category: "Perseverance" },
   ];
 
+  // Save quotes to localStorage
   function saveQuotes() {
     localStorage.setItem("quotes", JSON.stringify(quotes));
 }
@@ -52,17 +53,22 @@ const quotes = JSON.parse(localStorage.getItem("quotes")) ||[
       quoteDisplay.appendChild(quoteElement);
     });
   }
-
-  function exportToJsonFile() {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(quotes));
-    const downloadAnchor = document.createElement("a");
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", "quotes.json");
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+// Export quotes to JSON file
+function exportToJsonFile() {
+  const dataStr = JSON.stringify(quotes, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "quotes.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
+// Import quotes from JSON file
 function importFromJsonFile(event) {
   const fileReader = new FileReader();
   fileReader.onload = function(event) {
@@ -78,7 +84,7 @@ function importFromJsonFile(event) {
   };
   fileReader.readAsText(event.target.files[0]);
 }
-
+// Dynamically create the form when page loads
   function createAddQuoteForm() {
     const formContainer = document.createElement("div");
   
